@@ -28,6 +28,7 @@ namespace CompositionTetris
             _gameRoot.Children.InsertAtTop(_contentRoot);
 
             _timer = new StepTimer();
+            _timer.SetTargetElapsedSeconds(16 / 1000);
 
             InitializeBoard();
             _board[3, 5] = true;
@@ -70,7 +71,7 @@ namespace CompositionTetris
                 {
                     var position = _activeTiles[i];
 
-                    if (position.Y + 1 >= _boardHeight)
+                    if (!CanMoveDown(position))
                     {
                         canMove = false;
                         break;
@@ -154,6 +155,44 @@ namespace CompositionTetris
                     visual.Brush = _board[i, j] ? _tileBrush : null;
                 }
             }
+        }
+
+        private bool CanMoveDown(int x, int y)
+        {
+            return CanMove(x, y, 0, 1);
+        }
+
+        private bool CanMoveDown(TilePosition tilePosition)
+        {
+            return CanMoveDown(tilePosition.X, tilePosition.Y);
+        }
+
+        private bool CanMove(int x, int y, int dx, int dy)
+        {
+            var canMove = false;
+
+            var newX = x + dx;
+            var newY = y + dy;
+
+            foreach (var position in _activeTiles)
+            {
+                if (position.X == newX &&
+                    position.Y == newY)
+                {
+                    canMove = true;
+                }
+            }
+
+            if (!canMove)
+            {
+                if ((newX >= 0 && newX < _boardWidth) &&
+                (newY >= 0 && newY < _boardHeight))
+                {
+                    canMove = !_board[newX, newY];
+                }
+            }
+
+            return canMove;
         }
 
         private Compositor _compositor;
