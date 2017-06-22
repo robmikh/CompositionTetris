@@ -31,6 +31,15 @@ namespace CompositionTetris
 
             InitializeBoard();
             _board[3, 5] = true;
+            _board[3, 6] = true;
+            _board[4, 6] = true;
+            _board[4, 7] = true;
+
+            _activeTiles[0] = new TilePosition(3, 5);
+            _activeTiles[1] = new TilePosition(3, 6);
+            _activeTiles[2] = new TilePosition(4, 6);
+            _activeTiles[3] = new TilePosition(4, 7);
+            _tilesPerSecond = 0.5;
         }
 
         public bool Update()
@@ -49,6 +58,52 @@ namespace CompositionTetris
 
         private bool UpdateInternal(double elapsedSeconds)
         {
+            _secondsSinceLastDrop += elapsedSeconds;
+            var tilesToDrop = (int)(_secondsSinceLastDrop * _tilesPerSecond);
+            _secondsSinceLastDrop -= tilesToDrop / _tilesPerSecond;
+
+
+            while (tilesToDrop > 0)
+            {
+                var canMove = true;
+                for (int i = 0; i < _activeTiles.Length; i++)
+                {
+                    var position = _activeTiles[i];
+
+                    if (position.Y + 1 >= _boardHeight)
+                    {
+                        canMove = false;
+                        break;
+                    }
+                }
+
+                if (canMove)
+                {
+                    for (int i = 0; i < _activeTiles.Length; i++)
+                    {
+                        var position = _activeTiles[i];
+                        _board[position.X, position.Y] = false;
+                    }
+
+                    for (int i = 0; i < _activeTiles.Length; i++)
+                    {
+                        var position = _activeTiles[i];
+                        position.Y++;
+                        _board[position.X, position.Y] = true;
+                        _activeTiles[i] = position;
+                    }
+                }
+
+                if (canMove)
+                {
+                    tilesToDrop--;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             UpdateBoard();
 
             return false;
@@ -83,6 +138,7 @@ namespace CompositionTetris
                 }
             }
 
+            _activeTiles = new TilePosition[4];
             _tileBrush = _compositor.CreateColorBrush(Colors.Red);
 
             _contentRoot.Children.InsertAtTop(_boardVisual);
@@ -114,5 +170,8 @@ namespace CompositionTetris
         private Vector2 _tileSize;
         private SpriteVisual[,] _tileVisuals;
         private CompositionColorBrush _tileBrush;
+        private TilePosition[] _activeTiles;
+        private double _tilesPerSecond;
+        private double _secondsSinceLastDrop;
     }
 }
