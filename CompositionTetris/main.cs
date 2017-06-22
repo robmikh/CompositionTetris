@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
+using Windows.Graphics.Display;
 using Windows.UI.Composition;
 using Windows.UI.Core;
 
@@ -43,6 +44,15 @@ namespace CompositionTetris
             _target.Root = _root;
             _root.RelativeSizeAdjustment = Vector2.One;
 
+            // Undo scale
+            var displayInfo = DisplayInformation.GetForCurrentView();
+            var dpi = displayInfo.LogicalDpi;
+            UpdateInverseScale(dpi);
+            displayInfo.DpiChanged += (s, a) =>
+            {
+                UpdateInverseScale(s.LogicalDpi);
+            };
+
             _game = new Game(_root);
 
             bool quit = false;
@@ -63,6 +73,12 @@ namespace CompositionTetris
             _compositor = null;
             _target = null;
             _root = null;
+        }
+
+        private void UpdateInverseScale(float dpi)
+        {
+            var dpiScale = dpi / 96.0f;
+            _root.Scale = new Vector3(1.0f / dpiScale, 1.0f / dpiScale, 1.0f);
         }
 
         private CoreApplicationView _applicationView;
