@@ -59,6 +59,8 @@ namespace CompositionTetris
             _secondsSinceLastDrop -= tilesToDrop / _tilesPerSecond;
 
             var isSpaceDownThisFrame = IsKeyDown(VirtualKey.Space);
+            var isLeftDownThisFrame = IsKeyDown(VirtualKey.Left);
+            var isRightDownThisFrame = IsKeyDown(VirtualKey.Right);
 
             if (_activeTiles != null)
             {
@@ -69,61 +71,39 @@ namespace CompositionTetris
                 }
 
                 int dx = 0;
+                int dy = 0;
 
-                if (IsKeyDown(VirtualKey.Left))
+                if (_wasLeftDownLastFrame && !isLeftDownThisFrame)
                 {
                     dx = -1;
                 }
 
-                if (IsKeyDown(VirtualKey.Right))
+                if (_wasRightDownLastFrame && !isRightDownThisFrame)
                 {
                     dx = 1;
                 }
 
-                while (tilesToDrop > 0)
-                {
-                    var canMove = true;
-                    for (int i = 0; i < _activeTiles.Length; i++)
-                    {
-                        var position = _activeTiles[i];
+                TryMoveActivePiece(dx, 0);
 
-                        if (!CanMove(position.X, position.Y, dx, 1))
+                if (tilesToDrop > 0)
+                {
+                    dy = 1;
+                    do
+                    {
+                        if (TryMoveActivePiece(0, dy))
                         {
-                            canMove = false;
+                            tilesToDrop--;
+                        }
+                        else
+                        {
+                            _activeTiles = null;
                             break;
                         }
-                    }
+                    } while (tilesToDrop > 0);
 
-                    if (canMove)
+                    if (_activeTiles == null)
                     {
-                        for (int i = 0; i < _activeTiles.Length; i++)
-                        {
-                            var position = _activeTiles[i];
-                            _board[position.X, position.Y] = false;
-                        }
-
-                        for (int i = 0; i < _activeTiles.Length; i++)
-                        {
-                            var position = _activeTiles[i];
-                            position.X += dx;
-                            position.Y++;
-                            _board[position.X, position.Y] = true;
-                            _activeTiles[i] = position;
-                        }
-                    }
-                    else
-                    {
-                        _activeTiles = null;
-                    }
-
-                    if (canMove)
-                    {
-                        tilesToDrop--;
-                        dx = 0;
-                    }
-                    else
-                    {
-                        break;
+                        CheckAndClearLines();
                     }
                 }
             }
@@ -135,6 +115,8 @@ namespace CompositionTetris
             UpdateBoard();
 
             _wasSpaceDownLastFrame = isSpaceDownThisFrame;
+            _wasLeftDownLastFrame = isLeftDownThisFrame;
+            _wasRightDownLastFrame = isRightDownThisFrame;
             return false;
         }
 
@@ -203,7 +185,7 @@ namespace CompositionTetris
             if (!canMove)
             {
                 if ((newX >= 0 && newX < _boardWidth) &&
-                (newY >= 0 && newY < _boardHeight))
+                    (newY >= 0 && newY < _boardHeight))
                 {
                     canMove = !_board[newX, newY];
                 }
@@ -260,6 +242,79 @@ namespace CompositionTetris
             return isDown;
         }
 
+        private bool TryMoveActivePiece(int dx, int dy)
+        {
+            var canMove = true;
+            for (int i = 0; i < _activeTiles.Length; i++)
+            {
+                var position = _activeTiles[i];
+
+                if (!CanMove(position.X, position.Y, dx, dy))
+                {
+                    canMove = false;
+                    break;
+                }
+            }
+
+            if (canMove)
+            {
+                for (int i = 0; i < _activeTiles.Length; i++)
+                {
+                    var position = _activeTiles[i];
+                    _board[position.X, position.Y] = false;
+                }
+
+                for (int i = 0; i < _activeTiles.Length; i++)
+                {
+                    var position = _activeTiles[i];
+                    position.X += dx;
+                    position.Y += dy;
+                    _board[position.X, position.Y] = true;
+                    _activeTiles[i] = position;
+                }
+            }
+
+            return canMove;
+        }
+
+        private void CheckAndClearLines()
+        {
+            // Check each row
+            for (int j = 0; j < _boardHeight; j++)
+            {
+                int piecesOnLine = 0;
+                for (int i = 0; i < _boardWidth; i++)
+                {
+                    if (_board[i, j])
+                    {
+                        piecesOnLine++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                if (piecesOnLine == _boardWidth)
+                {
+                    // Clear the line
+                    for (int i = 0; i < _boardWidth; i++)
+                    {
+                        _board[i, j] = false;
+                    }
+
+                    // Move everything above
+                    for (int tempJ = j - 1; tempJ >= 0; tempJ--)
+                    {
+                        for (int i = 0; i < _boardWidth; i++)
+                        {
+                            _board[i, tempJ + 1] = _board[i, tempJ];
+                        }
+                    }
+                }
+            }
+        }
+
         private Compositor _compositor;
         private ContainerVisual _gameRoot;
         private ContainerVisual _contentRoot;
@@ -278,5 +333,7 @@ namespace CompositionTetris
         private double _tilesPerSecond;
         private double _secondsSinceLastDrop;
         private bool _wasSpaceDownLastFrame;
+        private bool _wasLeftDownLastFrame;
+        private bool _wasRightDownLastFrame;
     }
 }
