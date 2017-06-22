@@ -68,6 +68,18 @@ namespace CompositionTetris
                     _secondsSinceLastDrop = 0;
                 }
 
+                int dx = 0;
+
+                if (IsKeyDown(VirtualKey.Left))
+                {
+                    dx = -1;
+                }
+
+                if (IsKeyDown(VirtualKey.Right))
+                {
+                    dx = 1;
+                }
+
                 while (tilesToDrop > 0)
                 {
                     var canMove = true;
@@ -75,7 +87,7 @@ namespace CompositionTetris
                     {
                         var position = _activeTiles[i];
 
-                        if (!CanMoveDown(position))
+                        if (!CanMove(position.X, position.Y, dx, 1))
                         {
                             canMove = false;
                             break;
@@ -93,6 +105,7 @@ namespace CompositionTetris
                         for (int i = 0; i < _activeTiles.Length; i++)
                         {
                             var position = _activeTiles[i];
+                            position.X += dx;
                             position.Y++;
                             _board[position.X, position.Y] = true;
                             _activeTiles[i] = position;
@@ -106,6 +119,7 @@ namespace CompositionTetris
                     if (canMove)
                     {
                         tilesToDrop--;
+                        dx = 0;
                     }
                     else
                     {
@@ -170,16 +184,6 @@ namespace CompositionTetris
             }
         }
 
-        private bool CanMoveDown(int x, int y)
-        {
-            return CanMove(x, y, 0, 1);
-        }
-
-        private bool CanMoveDown(TilePosition tilePosition)
-        {
-            return CanMoveDown(tilePosition.X, tilePosition.Y);
-        }
-
         private bool CanMove(int x, int y, int dx, int dy)
         {
             var canMove = false;
@@ -228,7 +232,11 @@ namespace CompositionTetris
                         _activeTiles = null;
                         break;
                     }
-                    else
+                }
+
+                if (_activeTiles != null)
+                {
+                    foreach (var position in _activeTiles)
                     {
                         _board[position.X, position.Y] = true;
                     }
