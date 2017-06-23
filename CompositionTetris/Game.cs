@@ -200,12 +200,14 @@ namespace CompositionTetris
 
             if (_activeTiles == null)
             {
-                _activeTiles = new TilePosition[4];
+                var startPosition = new TilePosition(_boardWidth / 2, 0);
+                var pieceTemplate = GetRandomPieceTemplate();
+                _activeTiles = new TilePosition[pieceTemplate.Length];
 
-                _activeTiles[0] = new TilePosition(3, 5);
-                _activeTiles[1] = new TilePosition(3, 6);
-                _activeTiles[2] = new TilePosition(4, 6);
-                _activeTiles[3] = new TilePosition(4, 7);
+                for (int i = 0; i < _activeTiles.Length; i++)
+                {
+                    _activeTiles[i] = pieceTemplate[i] + startPosition;
+                }
 
                 foreach (var position in _activeTiles)
                 {
@@ -315,6 +317,13 @@ namespace CompositionTetris
             }
         }
 
+        private static TilePosition[] GetRandomPieceTemplate()
+        {
+            var index = s_random.Next(0, PieceTemplates.Length);
+
+            return PieceTemplates[index];
+        }
+
         private Compositor _compositor;
         private ContainerVisual _gameRoot;
         private ContainerVisual _contentRoot;
@@ -335,5 +344,58 @@ namespace CompositionTetris
         private bool _wasSpaceDownLastFrame;
         private bool _wasLeftDownLastFrame;
         private bool _wasRightDownLastFrame;
+
+        private static Random s_random = new Random();
+        private static TilePosition[] SPieceTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(0, 1),
+            new TilePosition(1, 1),
+            new TilePosition(1, 2)
+        };
+        private static TilePosition[] ZPieceTemplate =
+        {
+            new TilePosition(1, 0),
+            new TilePosition(1, 1),
+            new TilePosition(0, 1),
+            new TilePosition(0, 2)
+        };
+        private static TilePosition[] SquareTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(1, 0),
+            new TilePosition(0, 1),
+            new TilePosition(1, 1)
+        };
+        private static TilePosition[] LPieceTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(0, 1),
+            new TilePosition(0, 2),
+            new TilePosition(1, 2)
+        };
+        private static TilePosition[] ReverseLPieceTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(0, 1),
+            new TilePosition(0, 2),
+            new TilePosition(-1, 2)
+        };
+        private static TilePosition[] LinePieceTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(0, 1),
+            new TilePosition(0, 2),
+            new TilePosition(0, 3),
+        };
+        private static TilePosition[][] PieceTemplates =
+        {
+            SPieceTemplate,
+            ZPieceTemplate,
+            SquareTemplate,
+            LPieceTemplate,
+            ReverseLPieceTemplate,
+            LinePieceTemplate
+        };
     }
 }
