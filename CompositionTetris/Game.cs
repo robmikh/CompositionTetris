@@ -508,6 +508,13 @@ namespace CompositionTetris
             new TilePosition(0, 2),
             new TilePosition(0, 3),
         };
+        private static TilePosition[] TPieceTemplate =
+        {
+            new TilePosition(0, 0),
+            new TilePosition(1, 0),
+            new TilePosition(2, 0),
+            new TilePosition(1, 1)
+        };
         private static TilePosition[][] PieceTemplates =
         {
             SPieceTemplate,
@@ -515,7 +522,8 @@ namespace CompositionTetris
             SquareTemplate,
             LPieceTemplate,
             ReverseLPieceTemplate,
-            LinePieceTemplate
+            LinePieceTemplate,
+            TPieceTemplate
         };
     }
 }
