@@ -27,5 +27,10 @@ namespace CompositionTetris
         {
             return !(left == right);
         }
+
+        public static float Distance(TilePosition position1, TilePosition position2)
+        {
+            return (float)Math.Sqrt(Math.Pow(position2.X - position1.X, 2) + Math.Pow(position2.Y - position1.Y, 2));
+        }
     }
 }

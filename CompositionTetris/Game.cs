@@ -398,7 +398,7 @@ namespace CompositionTetris
 
                 foreach (var otherPosition in _activeTiles)
                 {
-                    var distance = (float)Math.Sqrt(Math.Pow(otherPosition.X - position.X, 2) + Math.Pow(otherPosition.Y - position.Y, 2));
+                    var distance = TilePosition.Distance(position, otherPosition);
                     if (distance > longestDistance)
                     {
                         longestDistance = distance;
