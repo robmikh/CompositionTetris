@@ -205,7 +205,7 @@ namespace CompositionTetris
             }
         }
 
-        private bool CanMove(int x, int y, int dx, int dy)
+        private bool CanMove(int x, int y, int dx, int dy, bool ignoreBounds)
         {
             var canMove = false;
 
@@ -227,6 +227,10 @@ namespace CompositionTetris
                     (newY >= 0 && newY < _boardHeight))
                 {
                     canMove = !_board[newX, newY];
+                }
+                else if (ignoreBounds)
+                {
+                    canMove = true;
                 }
             }
 
@@ -309,7 +313,7 @@ namespace CompositionTetris
             return canMove;
         }
 
-        private TilePosition[] TryMovePiece(TilePosition[] piece, int dx, int dy)
+        private TilePosition[] TryMovePiece(TilePosition[] piece, int dx, int dy, bool ignoreBounds = false)
         {
             var newPiece = new TilePosition[piece.Length];
             var canMove = true;
@@ -318,7 +322,7 @@ namespace CompositionTetris
             {
                 var position = piece[i];
 
-                if (!CanMove(position.X, position.Y, dx, dy))
+                if (!CanMove(position.X, position.Y, dx, dy, ignoreBounds))
                 {
                     canMove = false;
                     break;
@@ -479,7 +483,7 @@ namespace CompositionTetris
 
                 while (dx != 0)
                 {
-                    var newPiece = TryMovePiece(newActiveTiles, dx < 0 ? -1 : 1, 0);
+                    var newPiece = TryMovePiece(newActiveTiles, dx < 0 ? -1 : 1, 0, true);
                     if (newPiece != null)
                     {
                         newActiveTiles = newPiece;
@@ -493,7 +497,7 @@ namespace CompositionTetris
 
                 while (dy != 0)
                 {
-                    var newPiece = TryMovePiece(newActiveTiles, 0, dy < 0 ? -1 : 1);
+                    var newPiece = TryMovePiece(newActiveTiles, 0, dy < 0 ? -1 : 1, true);
                     if (newPiece != null)
                     {
                         newActiveTiles = newPiece;
