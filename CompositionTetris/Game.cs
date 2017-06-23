@@ -77,7 +77,7 @@ namespace CompositionTetris
 
                 if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
                 {
-                    
+                    TryRotateActivePiece(false);
                 }
 
                 if (_wasDownDowmLastFrame && !isDownDownThisFrame)
@@ -330,6 +330,83 @@ namespace CompositionTetris
                     }
                 }
             }
+        }
+
+        private bool TryRotateActivePiece(bool left)
+        {
+            var success = false;
+
+            var longestDistance = float.MinValue;
+            var centerPoint = new Vector2();
+            for (int i = 0; i < _activeTiles.Length; i++)
+            {
+                var position = _activeTiles[i];
+
+                foreach (var otherPosition in _activeTiles)
+                {
+                    var distance = (float)Math.Sqrt(Math.Pow(otherPosition.X - position.X, 2) + Math.Pow(otherPosition.Y - position.Y, 2));
+                    if (distance > longestDistance)
+                    {
+                        longestDistance = distance;
+                        centerPoint = new Vector2(position.X + otherPosition.X, position.Y + otherPosition.Y);
+                        centerPoint /= 2;
+                    }
+                }
+            }
+
+            var angle = (float)(Math.PI / 2.0);
+            if (left)
+            {
+                angle *= -1.0f;
+            }
+            var rotation = Matrix3x2.CreateRotation(angle, centerPoint);
+            var newActiveTiles = new TilePosition[_activeTiles.Length];
+
+            for (int i = 0; i < _activeTiles.Length; i++)
+            {
+                var position = _activeTiles[i];
+                var temp = Vector2.Transform(new Vector2(position.X, position.Y), rotation);
+                var newPosition = new TilePosition((int)Math.Ceiling(temp.X), (int)Math.Ceiling(temp.Y));
+
+                newActiveTiles[i] = newPosition;
+
+                var overlap = false;
+                foreach (var pos in _activeTiles)
+                {
+                    if (newPosition == pos)
+                    {
+                        overlap = true;
+                        break;
+                    }
+                }
+
+                var withinBounds = newPosition.X >= 0 && newPosition.X < _boardWidth && newPosition.Y >= 0 && newPosition.Y < _boardHeight;
+
+                if (!overlap &&
+                    (!withinBounds || _board[newPosition.X, newPosition.Y]))
+                {
+                    newActiveTiles = null;
+                    break;
+                }
+            }
+
+            if (newActiveTiles != null)
+            {
+                foreach (var pos in _activeTiles)
+                {
+                    _board[pos.X, pos.Y] = false;
+                }
+
+                foreach (var pos in newActiveTiles)
+                {
+                    _board[pos.X, pos.Y] = true;
+                }
+
+                _activeTiles = newActiveTiles;
+                success = true;
+            }
+
+            return success;
         }
 
         private static TilePosition[] GetRandomPieceTemplate()

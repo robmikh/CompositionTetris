@@ -17,5 +17,15 @@ namespace CompositionTetris
         {
             return new TilePosition(left.X + right.X, left.Y + right.Y);
         }
+
+        public static bool operator==(TilePosition left, TilePosition right)
+        {
+            return left.X == right.X && left.Y == right.Y;
+        }
+
+        public static bool operator!=(TilePosition left, TilePosition right)
+        {
+            return !(left == right);
+        }
     }
 }
