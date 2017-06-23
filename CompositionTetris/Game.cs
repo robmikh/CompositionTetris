@@ -61,17 +61,29 @@ namespace CompositionTetris
             var isSpaceDownThisFrame = IsKeyDown(VirtualKey.Space);
             var isLeftDownThisFrame = IsKeyDown(VirtualKey.Left);
             var isRightDownThisFrame = IsKeyDown(VirtualKey.Right);
+            var isUpDownThisFrame = IsKeyDown(VirtualKey.Up);
+            var isDownDownThisFrame = IsKeyDown(VirtualKey.Down);
 
             if (_activeTiles != null)
             {
-                if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
+                int dx = 0;
+                int dy = 0;
+
+                if (_wasUpDownLastFrame && !isUpDownThisFrame)
                 {
                     tilesToDrop = _boardHeight;
                     _secondsSinceLastDrop = 0;
                 }
 
-                int dx = 0;
-                int dy = 0;
+                if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
+                {
+                    
+                }
+
+                if (_wasDownDowmLastFrame && !isDownDownThisFrame)
+                {
+                    dy = 1;
+                }
 
                 if (_wasLeftDownLastFrame && !isLeftDownThisFrame)
                 {
@@ -84,6 +96,7 @@ namespace CompositionTetris
                 }
 
                 TryMoveActivePiece(dx, 0);
+                TryMoveActivePiece(0, dy);
 
                 if (tilesToDrop > 0)
                 {
@@ -117,6 +130,8 @@ namespace CompositionTetris
             _wasSpaceDownLastFrame = isSpaceDownThisFrame;
             _wasLeftDownLastFrame = isLeftDownThisFrame;
             _wasRightDownLastFrame = isRightDownThisFrame;
+            _wasUpDownLastFrame = isUpDownThisFrame;
+            _wasDownDowmLastFrame = isDownDownThisFrame;
             return false;
         }
 
@@ -344,6 +359,8 @@ namespace CompositionTetris
         private bool _wasSpaceDownLastFrame;
         private bool _wasLeftDownLastFrame;
         private bool _wasRightDownLastFrame;
+        private bool _wasUpDownLastFrame;
+        private bool _wasDownDowmLastFrame;
 
         private static Random s_random = new Random();
         private static TilePosition[] SPieceTemplate =
