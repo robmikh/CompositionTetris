@@ -286,10 +286,37 @@ namespace CompositionTetris
 
         private bool TryMoveActivePiece(int dx, int dy)
         {
-            var canMove = true;
-            for (int i = 0; i < _activeTiles.Length; i++)
+            var newPiece = TryMovePiece(_activeTiles, dx, dy);
+            var canMove = newPiece != null;
+
+            if (canMove)
             {
-                var position = _activeTiles[i];
+                for (int i = 0; i < _activeTiles.Length; i++)
+                {
+                    var position = _activeTiles[i];
+                    _board[position.X, position.Y] = false;
+                }
+
+                for (int i = 0; i < newPiece.Length; i++)
+                {
+                    var position = newPiece[i];
+                    _board[position.X, position.Y] = true;
+                }
+
+                _activeTiles = newPiece;
+            }
+
+            return canMove;
+        }
+
+        private TilePosition[] TryMovePiece(TilePosition[] piece, int dx, int dy)
+        {
+            var newPiece = new TilePosition[piece.Length];
+            var canMove = true;
+
+            for (int i = 0; i < piece.Length; i++)
+            {
+                var position = piece[i];
 
                 if (!CanMove(position.X, position.Y, dx, dy))
                 {
@@ -300,23 +327,21 @@ namespace CompositionTetris
 
             if (canMove)
             {
-                for (int i = 0; i < _activeTiles.Length; i++)
+                for (int i = 0; i < piece.Length; i++)
                 {
-                    var position = _activeTiles[i];
-                    _board[position.X, position.Y] = false;
-                }
-
-                for (int i = 0; i < _activeTiles.Length; i++)
-                {
-                    var position = _activeTiles[i];
+                    var position = piece[i];
                     position.X += dx;
                     position.Y += dy;
-                    _board[position.X, position.Y] = true;
-                    _activeTiles[i] = position;
+                    newPiece[i] = position;
                 }
             }
+            else
+            {
+                newPiece = null;
+            }
 
-            return canMove;
+            return newPiece;
+
         }
 
         private void CheckAndClearLines()
@@ -394,21 +419,107 @@ namespace CompositionTetris
                 var newPosition = new TilePosition((int)Math.Ceiling(temp.X), (int)Math.Ceiling(temp.Y));
 
                 newActiveTiles[i] = newPosition;
+            }
 
-                var overlap = false;
-                foreach (var pos in _activeTiles)
+            var withinBounds = true;
+            var farthestLeft = int.MaxValue;
+            var farthestRight = int.MinValue;
+            var farthestTop = int.MaxValue;
+            var farthestBottom = int.MinValue;
+            for (int i = 0; i < newActiveTiles.Length; i++)
+            {
+                var newPosition = newActiveTiles[i];
+
+                if (newPosition.X < farthestLeft)
                 {
-                    if (newPosition == pos)
+                    farthestLeft = newPosition.X;
+                }
+                if (newPosition.X > farthestRight)
+                {
+                    farthestRight = newPosition.X;
+                }
+
+                if (newPosition.Y < farthestTop)
+                {
+                    farthestTop = newPosition.Y;
+                }
+                if (newPosition.Y > farthestBottom)
+                {
+                    farthestBottom = newPosition.Y;
+                }
+
+                if (!((newPosition.X >= 0 && newPosition.X < _boardWidth) && (newPosition.Y >= 0 && newPosition.Y < _boardHeight)))
+                {
+                    withinBounds = false;
+                }
+            }
+
+            if (!withinBounds)
+            {
+                int dx = 0;
+                int dy = 0;
+
+                if (farthestLeft != int.MaxValue && farthestLeft < 0)
+                {
+                    dx = farthestLeft * -1;
+                }
+                else if (farthestRight != int.MinValue && farthestRight >= _boardWidth)
+                {
+                    dx = farthestRight - _boardWidth - 1;
+                }
+
+                if (farthestTop != int.MaxValue && farthestTop < 0)
+                {
+                    dy = farthestTop * -1;
+                }
+                else if (farthestBottom != int.MinValue && farthestBottom >= _boardHeight)
+                {
+                    dy = farthestBottom - _boardHeight - 1;
+                }
+
+                while (dx != 0)
+                {
+                    var newPiece = TryMovePiece(newActiveTiles, dx < 0 ? -1 : 1, 0);
+                    if (newPiece != null)
+                    {
+                        newActiveTiles = newPiece;
+                        dx += dx < 0 ? 1 : -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                while (dy != 0)
+                {
+                    var newPiece = TryMovePiece(newActiveTiles, 0, dy < 0 ? -1 : 1);
+                    if (newPiece != null)
+                    {
+                        newActiveTiles = newPiece;
+                        dy += dy < 0 ? 1 : -1;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            
+            foreach (var newPosition in newActiveTiles)
+            {
+                var overlap = false;
+                foreach (var position in _activeTiles)
+                {
+                    if (newPosition == position)
                     {
                         overlap = true;
                         break;
                     }
                 }
 
-                var withinBounds = newPosition.X >= 0 && newPosition.X < _boardWidth && newPosition.Y >= 0 && newPosition.Y < _boardHeight;
-
-                if (!overlap &&
-                    (!withinBounds || _board[newPosition.X, newPosition.Y]))
+                if (!overlap && _board[newPosition.X, newPosition.Y])
                 {
                     newActiveTiles = null;
                     break;
