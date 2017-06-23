@@ -34,7 +34,7 @@ namespace CompositionTetris
             _timer.SetFixedTimeStep(true);
 
             InitializeBoard();
-            SpawnPiece();            
+            TrySpawnPiece();            
             _tilesPerSecond = 0.5;
         }
 
@@ -64,65 +64,89 @@ namespace CompositionTetris
             var isUpDownThisFrame = IsKeyDown(VirtualKey.Up);
             var isDownDownThisFrame = IsKeyDown(VirtualKey.Down);
 
-            if (_activeTiles != null)
+            if (!_lost)
             {
-                int dx = 0;
-                int dy = 0;
-
-                if (_wasUpDownLastFrame && !isUpDownThisFrame)
+                if (_activeTiles != null)
                 {
-                    tilesToDrop = _boardHeight;
-                    _secondsSinceLastDrop = 0;
-                }
+                    int dx = 0;
+                    int dy = 0;
 
-                if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
-                {
-                    TryRotateActivePiece(false);
-                }
-
-                if (_wasDownDowmLastFrame && !isDownDownThisFrame)
-                {
-                    dy = 1;
-                }
-
-                if (_wasLeftDownLastFrame && !isLeftDownThisFrame)
-                {
-                    dx = -1;
-                }
-
-                if (_wasRightDownLastFrame && !isRightDownThisFrame)
-                {
-                    dx = 1;
-                }
-
-                TryMoveActivePiece(dx, 0);
-                TryMoveActivePiece(0, dy);
-
-                if (tilesToDrop > 0)
-                {
-                    dy = 1;
-                    do
+                    if (_wasUpDownLastFrame && !isUpDownThisFrame)
                     {
-                        if (TryMoveActivePiece(0, dy))
-                        {
-                            tilesToDrop--;
-                        }
-                        else
-                        {
-                            _activeTiles = null;
-                            break;
-                        }
-                    } while (tilesToDrop > 0);
+                        tilesToDrop = _boardHeight;
+                        _secondsSinceLastDrop = 0;
+                    }
 
-                    if (_activeTiles == null)
+                    if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
                     {
-                        CheckAndClearLines();
+                        TryRotateActivePiece(false);
+                    }
+
+                    if (_wasDownDowmLastFrame && !isDownDownThisFrame)
+                    {
+                        dy = 1;
+                    }
+
+                    if (_wasLeftDownLastFrame && !isLeftDownThisFrame)
+                    {
+                        dx = -1;
+                    }
+
+                    if (_wasRightDownLastFrame && !isRightDownThisFrame)
+                    {
+                        dx = 1;
+                    }
+
+                    TryMoveActivePiece(dx, 0);
+                    TryMoveActivePiece(0, dy);
+
+                    if (tilesToDrop > 0)
+                    {
+                        dy = 1;
+                        do
+                        {
+                            if (TryMoveActivePiece(0, dy))
+                            {
+                                tilesToDrop--;
+                            }
+                            else
+                            {
+                                _activeTiles = null;
+                                break;
+                            }
+                        } while (tilesToDrop > 0);
+
+                        if (_activeTiles == null)
+                        {
+                            CheckAndClearLines();
+                        }
+                    }
+                }
+                else
+                {
+                    var success = TrySpawnPiece();
+                    if (!success)
+                    {
+                        _tileBrush.Color = Colors.LightGray;
+                        _lost = true;
                     }
                 }
             }
             else
             {
-                SpawnPiece();
+                if (_wasSpaceDownLastFrame && !isSpaceDownThisFrame)
+                {
+                    for (int i = 0; i < _boardWidth; i++)
+                    {
+                        for (int j = 0; j < _boardHeight; j++)
+                        {
+                            _board[i, j] = false;
+                        }
+                    }
+
+                    _lost = false;
+                    _tileBrush.Color = Colors.Red;
+                }
             }
 
             UpdateBoard();
@@ -209,7 +233,7 @@ namespace CompositionTetris
             return canMove;
         }
 
-        private bool SpawnPiece()
+        private bool TrySpawnPiece()
         {
             bool success = false;
 
@@ -239,6 +263,7 @@ namespace CompositionTetris
                     {
                         _board[position.X, position.Y] = true;
                     }
+                    success = true;
                 }
             }
 
@@ -438,6 +463,7 @@ namespace CompositionTetris
         private bool _wasRightDownLastFrame;
         private bool _wasUpDownLastFrame;
         private bool _wasDownDowmLastFrame;
+        private bool _lost;
 
         private static Random s_random = new Random();
         private static TilePosition[] SPieceTemplate =
